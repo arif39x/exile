@@ -1,0 +1,64 @@
+# Exile Platform: Firewall Rules
+# Global Policy: Deny-by-Default (Whitelist only)
+
+rules:
+  # Management Access
+  - name: "Allow Admin via WireGuard"
+    src: EXTERNAL
+    dst: MGMT
+    proto: UDP
+    port: 51820
+    action: PASS
+
+  # Control Plane Connectivity
+  - name: "Control services talk to databases"
+    src: CONTROL
+    dst: CONTROL
+    proto: TCP
+    port: [5432, 6379, 8200] # Postgres, Redis, Vault
+    action: PASS
+
+  # Worker Communication
+  - name: "Workers report to Node Registry"
+    src: WORKER
+    dst: CONTROL
+    proto: TCP
+    port: 9090 # Example Node Registry port
+    action: PASS
+
+  - name: "Workers pull jobs from Nomad"
+    src: WORKER
+    dst: CONTROL
+    proto: TCP
+    port: [4646, 4647, 4648] # Nomad ports
+    action: PASS
+
+  - name: "Workers fetch secrets from Vault"
+    src: WORKER
+    dst: CONTROL
+    proto: TCP
+    port: 8200
+    action: PASS
+
+  # Workload (Mining) Specifics
+  - name: "Workers talk to local Mining Proxy"
+    src: WORKER
+    dst: DMZ
+    proto: TCP
+    port: 3333 # Stratum proxy port
+    action: PASS
+
+  - name: "Mining Proxy talks to external Pools"
+    src: DMZ
+    dst: INTERNET
+    proto: TCP
+    port: [443, 14444] # Pool ports (SSL)
+    action: PASS
+
+  # Observability
+  - name: "Prometheus scrapes nodes"
+    src: CONTROL
+    dst: [WORKER, DMZ, CONTROL]
+    proto: TCP
+    port: 9100 # node_exporter
+    action: PASS

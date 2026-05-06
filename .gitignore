@@ -1,0 +1,39 @@
+# Exile Platform: Ignored Files
+
+# Documentation
+Books/
+
+# Rust
+target/
+
+# Go
+bin/
+dist/
+/control_plane/vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env
+
+# Local Security Artifacts (Public/Private Keys, Certs)
+# scripts might generate them locally during setup.
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+
+# OS & IDEs
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+logs/
+*.log

@@ -1,0 +1,28 @@
+# Exile Platform: VLAN Topology
+# This file defines our network segments. Each VLAN represents a distinct trust boundary.
+
+vlans:
+  - id: 10
+    name: MGMT
+    description: "Administrative access and bastion hosts. Access is restricted to WireGuard VPN only."
+    priority: highest
+
+  - id: 20
+    name: CONTROL
+    description: "The brains of the operation. Houses control-plane services, databases, and the registry."
+    access_from: [MGMT]
+
+  - id: 30
+    name: WORKER
+    description: "The 1,000-node fleet. These nodes are untrusted and should only talk to the CONTROL plane."
+    access_from: [CONTROL]
+
+  - id: 40
+    name: DMZ
+    description: "Public-facing services (e.g., status pages or regional proxies)."
+    access_from: [INTERNET, CONTROL]
+
+  - id: 50
+    name: USER
+    description: "Standard office/user equipment. No access permitted to MGMT, CONTROL, or WORKER segments."
+    access_from: [INTERNET]

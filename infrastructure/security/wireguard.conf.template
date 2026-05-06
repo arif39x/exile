@@ -1,0 +1,27 @@
+# Exile Platform: WireGuard Client Template
+# This template is used to generate config files for administrators.
+
+[Interface]
+# The private key for this specific admin. Keep this secret!
+PrivateKey = {{admin_private_key}}
+
+# The internal management IP for this admin
+Address = {{admin_mgmt_ip}}/32
+
+# Use a standard, high-performance DNS resolver (or internal if available)
+DNS = 1.1.1.1, 8.8.8.8
+
+[Peer]
+# The public key of the Exile Gateway / Bastion Host
+PublicKey = {{gateway_public_key}}
+
+# The public IP and port of the Exile Gateway
+Endpoint = {{gateway_public_ip}}:51820
+
+# Route only management and control traffic through the VPN
+# 10.10.10.0/24 is our MGMT VLAN subnet
+# 10.10.20.0/24 is our CONTROL VLAN subnet
+AllowedIPs = 10.10.10.0/24, 10.10.20.0/24
+
+# Keep the connection alive behind NAT
+PersistentKeepalive = 25
