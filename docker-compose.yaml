@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: exile
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infrastructure/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  nats:
+    image: nats:2.9-alpine
+    command: "-js"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+  nomad-server:
+    image: hashicorp/nomad:latest
+    volumes:
+      - ./infrastructure/nomad/server.hcl:/etc/nomad.d/server.hcl
+    command: "agent -server -config=/etc/nomad.d/server.hcl"
+    ports:
+      - "4646:4646"
+
+  node-registry:
+    build:
+      context: ./control_plane
+      dockerfile: Dockerfile.node-registry
+    environment:
+      DATABASE_URL: "postgres://postgres:password@db:5432/exile?sslmode=disable"
+      NATS_URL: "nats://nats:4222"
+    depends_on:
+      - db
+      - nats
+
+  health-service:
+    build:
+      context: ./control_plane
+      dockerfile: Dockerfile.health-service
+    environment:
+      DATABASE_URL: "postgres://postgres:password@db:5432/exile?sslmode=disable"
+      NATS_URL: "nats://nats:4222"
+    depends_on:
+      - db
+      - nats

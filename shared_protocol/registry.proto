@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package exile.registry.v1;
+
+option go_package = "github.com/exile-platform/exile/shared_protocol/registry/v1";
+
+import "google/protobuf/timestamp.proto";
+
+service NodeRegistry {
+  rpc RegisterNode(RegisterNodeRequest) returns (Node);
+  rpc GetNode(GetNodeRequest) returns (Node);
+  rpc ListNodes(ListNodesRequest) returns (ListNodesResponse);
+}
+
+message Node {
+  string id = 1;
+  string hostname = 2;
+  string ip_address = 3;
+  string os_family = 4;
+  string os_arch = 5;
+  string state = 6;
+  google.protobuf.Timestamp last_heartbeat = 7;
+}
+
+message RegisterNodeRequest {
+  string hostname = 1;
+  string ip_address = 2;
+  string os_family = 3;
+  string os_arch = 4;
+}
+
+message GetNodeRequest {
+  string id = 1;
+}
+
+message ListNodesRequest {
+  string state_filter = 1;
+}
+
+message ListNodesResponse {
+  repeated Node nodes = 1;
+}

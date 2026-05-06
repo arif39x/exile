@@ -1,0 +1,15 @@
+# Nomad Sentinel Policy: Basic Placement Constraints
+
+# Only allow deployment if the node is in 'healthy' state
+node_is_healthy = rule {
+    node.meta["state"] is "healthy"
+}
+
+# Ensure the node has enough CPU resources
+has_resources = rule {
+    node.resources.cpu.total >= 1000
+}
+
+main = rule {
+    node_is_healthy and has_resources
+}

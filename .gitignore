@@ -10,6 +10,11 @@ target/
 bin/
 dist/
 /control_plane/vendor/
+/control_plane/node-registry
+/control_plane/health-service
+/control_plane/policy-engine
+*.test
+*.out
 
 # Python
 __pycache__/
@@ -37,3 +42,4 @@ venv/
 # Project specific
 logs/
 *.log
+data/
