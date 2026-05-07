@@ -5,6 +5,9 @@ Books/
 
 # Rust
 target/
+node_agent/target/
+**/*.rs.bk
+Cargo.lock
 
 # Go
 bin/
