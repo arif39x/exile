@@ -33,7 +33,11 @@ async fn main() -> Result<()> {
     let registry_endpoint =
         std::env::var("REGISTRY_ADDR").unwrap_or_else(|_| "http://127.0.0.1:50051".to_string());
 
-    // Initialize Vault Sidecar
+    let nats_url =
+        std::env::var("NATS_URL").unwrap_or_else(|_| "nats://127.0.0.1:4222".to_string());
+    let nats_client = async_nats::connect(nats_url).await?;
+
+    // Initi Vault Sidecar
     let vault = Arc::new(VaultSidecar::new(vault_config));
 
     // Authenticate with Vault
@@ -63,7 +67,7 @@ async fn main() -> Result<()> {
     ));
     let config_poller = Arc::new(ConfigPoller::new(
         vault.config.address.clone(),
-        node_id,
+        node_id.clone(),
         vault.get_token_lock(), // I need to expose this
     ));
 
@@ -74,12 +78,15 @@ async fn main() -> Result<()> {
     let heartbeat_clone = heartbeat.clone();
     let supervisor_clone = supervisor.clone();
     let config_poller_clone = config_poller.clone();
+    let node_id_clone = node_id.clone();
+    let nats_client_clone = nats_client.clone();
 
     tokio::select! {
         _ = vault_clone.start_renewal_loop() => {},
         _ = heartbeat_clone.start_loop() => {},
         _ = config_poller_clone.start_loop() => {},
         _ = supervisor_clone.monitor_workloads() => {},
+        _ = supervisor_clone.listen_for_intents(nats_client_clone, node_id_clone) => {},
     }
 
     Ok(())

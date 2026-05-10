@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package exile.workload.v1;
+
+option go_package = "github.com/exile-platform/exile/shared_protocol/workload/v1";
+
+message WorkloadDefinition {
+  string id = 1;
+  string name = 2;
+  string version = 3;
+  string artifact_ref = 4;
+  string artifact_hash = 5;
+  string config_template = 6;
+  ResourceRequirements resource_requirements = 7;
+  HealthCheck health_check = 8;
+  string metrics_endpoint = 9;
+  LogFormat log_format = 10;
+}
+
+message ResourceRequirements {
+  float cpu_cores = 1;
+  uint64 memory_mb = 2;
+  enum OS {
+    OS_UNSPECIFIED = 0;
+    OS_LINUX = 1;
+    OS_WINDOWS = 2;
+    OS_MACOS = 3;
+  }
+  OS os = 3;
+  enum Architecture {
+    ARCH_UNSPECIFIED = 0;
+    ARCH_X86_64 = 1;
+    ARCH_AARCH64 = 2;
+  }
+  Architecture architecture = 4;
+}
+
+message HealthCheck {
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    TYPE_PROCESS = 1;
+    TYPE_HTTP = 2;
+    TYPE_TCP = 3;
+    TYPE_CUSTOM = 4;
+  }
+  Type type = 1;
+  uint32 interval_seconds = 2;
+  uint32 failure_threshold = 3;
+}
+
+enum LogFormat {
+  LOG_FORMAT_UNSPECIFIED = 0;
+  LOG_FORMAT_JSON = 1;
+  LOG_FORMAT_TEXT = 2;
+}
+
+service WorkloadService {
+  rpc Deploy(DeployRequest) returns (WorkloadStatus);
+  rpc Start(StartRequest) returns (WorkloadStatus);
+  rpc Stop(StopRequest) returns (WorkloadStatus);
+  rpc Restart(RestartRequest) returns (WorkloadStatus);
+  rpc Reconfigure(ReconfigureRequest) returns (WorkloadStatus);
+  rpc GetStatus(GetStatusRequest) returns (WorkloadStatus);
+  rpc GetMetrics(GetMetricsRequest) returns (WorkloadMetrics);
+  rpc GetLogs(GetLogsRequest) returns (stream LogLine);
+}
+
+message GetMetricsRequest {
+  string workload_id = 1;
+}
+
+message WorkloadMetrics {
+  string workload_id = 1;
+  map<string, double> metrics = 2;
+}
+
+message GetLogsRequest {
+  string workload_id = 1;
+  uint32 tail_lines = 2;
+}
+
+message LogLine {
+  string workload_id = 1;
+  string line = 2;
+  int64 timestamp = 3;
+}
+
+message DeployRequest {
+  WorkloadDefinition definition = 1;
+}
+
+message StartRequest {
+  string workload_id = 1;
+}
+
+message StopRequest {
+  string workload_id = 1;
+}
+
+message RestartRequest {
+  string workload_id = 1;
+}
+
+message ReconfigureRequest {
+  string workload_id = 1;
+  string config_template = 2;
+}
+
+message GetStatusRequest {
+  string workload_id = 1;
+}
+
+message WorkloadStatus {
+  string workload_id = 1;
+  State state = 2;
+  string message = 3;
+  enum State {
+    STATE_UNSPECIFIED = 0;
+    STATE_PENDING = 1;
+    STATE_DEPLOYING = 2;
+    STATE_STARTING = 3;
+    STATE_RUNNING = 4;
+    STATE_STOPPING = 5;
+    STATE_STOPPED = 6;
+    STATE_FAILED = 7;
+    STATE_DEGRADED = 8;
+  }
+}

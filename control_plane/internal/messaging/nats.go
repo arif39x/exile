@@ -5,13 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/nats-io/nats.go"
 	"github.com/exile-platform/exile/control_plane/internal/registry"
+	"github.com/exile-platform/exile/control_plane/internal/workload"
+	"github.com/google/uuid"
+	"github.com/nats-io/nats.go"
 )
 
 type NATSClient struct {
 	nc *nats.Conn
 	js nats.JetStreamContext
+}
+
+func (n *NATSClient) IssueWorkloadIntent(ctx context.Context, nodeID uuid.UUID, operation string, wd *workload.WorkloadDefinition) error {
+	subject := fmt.Sprintf("platform.workloads.%s.%s.%s", nodeID.String(), wd.ID.String(), operation)
+	data, err := json.Marshal(wd)
+	if err != nil {
+		return fmt.Errorf("failed to marshal workload definition: %w", err)
+	}
+
+	_, err = n.js.Publish(subject, data)
+	return err
 }
 
 func NewNATSClient(url string) (*NATSClient, error) {

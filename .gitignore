@@ -16,6 +16,7 @@ dist/
 /control_plane/node-registry
 /control_plane/health-service
 /control_plane/policy-engine
+/control_plane/workload-manager
 *.test
 *.out
 
@@ -46,3 +47,4 @@ venv/
 logs/
 *.log
 data/
+workloads/
