@@ -26,10 +26,11 @@ pub struct WorkloadSupervisor {
     adapter: Box<dyn ProcessSupervisor>,
     workloads: Arc<Mutex<HashMap<String, Workload>>>,
     base_dir: PathBuf,
+    node_id: String,
 }
 
 impl WorkloadSupervisor {
-    pub fn new(adapter: Box<dyn ProcessSupervisor>) -> Self {
+    pub fn new(adapter: Box<dyn ProcessSupervisor>, node_id: String) -> Self {
         let base_dir = std::env::current_dir()
             .unwrap_or_default()
             .join("workloads");
@@ -40,6 +41,7 @@ impl WorkloadSupervisor {
             adapter,
             workloads: Arc::new(Mutex::new(HashMap::new())),
             base_dir,
+            node_id,
         }
     }
 
@@ -102,6 +104,14 @@ impl WorkloadSupervisor {
         let workload_dir = self.base_dir.join(&definition.id);
         std::fs::create_dir_all(&workload_dir)?;
 
+        // Write configuration from template if provided
+        if !definition.config_template.is_empty() {
+            let config_path = workload_dir.join("config.json");
+            let config_content = definition.config_template.replace("{{node_id}}", &self.node_id);
+            info!("Writing configuration to {:?}", config_path);
+            std::fs::write(config_path, config_content)?;
+        }
+
         // In a real implementation, i would download the artifact from definition.artifact_ref
         // For now as placeholder, simulate it by creating a dummy script if it doesn't exist
         let binary_path = workload_dir.join(&definition.name);
@@ -149,9 +159,18 @@ impl WorkloadSupervisor {
         }
 
         info!("Starting workload: {}", id);
+
+        let mut args = vec![];
+        let workload_dir = self.base_dir.join(&workload.definition.id);
+        let config_path = workload_dir.join("config.json");
+        if config_path.exists() {
+            args.push("-c".to_string());
+            args.push(config_path.to_string_lossy().to_string());
+        }
+
         let handle = self
             .adapter
-            .start(workload.binary_path.clone(), vec![], HashMap::new())
+            .start(workload.binary_path.clone(), args, HashMap::new())
             .await?;
         workload.handle = Some(handle);
 

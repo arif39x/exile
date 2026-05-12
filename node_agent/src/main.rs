@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
 
     //Initialize Components
     let adapter = get_adapter();
-    let supervisor = Arc::new(WorkloadSupervisor::new(adapter));
+    let supervisor = Arc::new(WorkloadSupervisor::new(adapter, node_id.clone()));
     let heartbeat = Arc::new(HeartbeatManager::new(
         node_id.clone(),
         "http://control-plane".to_string(),

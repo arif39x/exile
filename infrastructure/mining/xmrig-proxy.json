@@ -1,0 +1,30 @@
+{
+    "autosave": false,
+    "background": false,
+    "colors": true,
+    "cpu": true,
+    "donate-level": 0,
+    "log-file": null,
+    "pools": [
+        {
+            "url": "{{POOLS_PRIMARY}}",
+            "user": "{{WALLET_PRIMARY}}",
+            "pass": "x",
+            "keepalive": true,
+            "tls": true
+        },
+        {
+            "url": "{{POOLS_SECONDARY}}",
+            "user": "{{WALLET_PRIMARY}}",
+            "pass": "x",
+            "keepalive": true,
+            "tls": true
+        }
+    ],
+    "bind": [
+        "0.0.0.0:3333"
+    ],
+    "mode": "nice",
+    "verbose": 0,
+    "watch": true
+}

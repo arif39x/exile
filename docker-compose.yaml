@@ -26,6 +26,44 @@ services:
     ports:
       - "4646:4646"
 
+  vault:
+    image: vault:1.13.3
+    container_name: vault
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./infrastructure/security/vault_config.hcl:/vault/config/vault_config.hcl
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_API_ADDR: "http://0.0.0.0:8200"
+    command: "server -config=/vault/config/vault_config.hcl"
+    cap_add:
+      - IPC_LOCK
+
+  xmrig-proxy-1:
+    image: metal3d/xmrig-proxy:latest
+    volumes:
+      - ./infrastructure/mining/xmrig-proxy.json:/etc/xmrig-proxy/config.json
+    depends_on:
+      - vault
+
+  xmrig-proxy-2:
+    image: metal3d/xmrig-proxy:latest
+    volumes:
+      - ./infrastructure/mining/xmrig-proxy.json:/etc/xmrig-proxy/config.json
+    depends_on:
+      - vault
+
+  haproxy:
+    image: haproxy:2.8-alpine
+    volumes:
+      - ./infrastructure/mining/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    ports:
+      - "3333:3333"
+    depends_on:
+      - xmrig-proxy-1
+      - xmrig-proxy-2
+
   node-registry:
     build:
       context: ./control_plane
